@@ -210,15 +210,15 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--copper);outline
     <h2 id="cx">Controls</h2>
     <div class="cgrid">
       <div class="ctrl">
-        <label for="slug">Slug depth in coil <output id="oSlug">20%</output></label>
-        <input id="slug" type="range" min="0" max="100" step="1" value="20">
+        <label for="slug">Slug depth in coil <output id="oSlug">50%</output></label>
+        <input id="slug" type="range" min="0" max="100" step="1" value="50">
         <div class="note">0% = backed out of the winding · 100% = fully inside it</div>
       </div>
       <div class="ctrl" role="radiogroup" aria-labelledby="matLab">
         <div class="lab" id="matLab">Slug material</div>
         <div class="seg">
-          <input type="radio" name="mat" id="m-ferrite" value="ferrite" checked><label for="m-ferrite">Good ferrite</label>
-          <input type="radio" name="mat" id="m-cracked" value="cracked"><label for="m-cracked">Cracked ferrite</label>
+          <input type="radio" name="mat" id="m-ferrite" value="ferrite"><label for="m-ferrite">Good ferrite</label>
+          <input type="radio" name="mat" id="m-cracked" value="cracked" checked><label for="m-cracked">Cracked ferrite</label>
           <input type="radio" name="mat" id="m-brass" value="brass"><label for="m-brass">Brass</label>
           <input type="radio" name="mat" id="m-plastic" value="plastic"><label for="m-plastic">Plastic</label>
         </div>
@@ -374,10 +374,10 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--copper);outline
 <script>
 (function(){
 /* ---------- model ---------- */
-const L_OUT=12.1, L_IN=44.2, L_YOKE=60, TOOL_L=18, SPEC_W=7.0, GLASS_W=7.6, GLASS_H=5.4, PIC_H=4.7, V_REF=12.4;
+const L_OUT=12.1, L_IN=44.2, L_YOKE=30, TOOL_L=18, SPEC_W=7.0, GLASS_W=7.6, GLASS_H=5.4, PIC_H=4.7, V_REF=12.4;
 const K = SPEC_W*(L_YOKE + L_OUT + (L_IN-L_OUT)*Math.pow(0.65,1.3)); // 7.0 in at 65% depth, 12.4 V, good ferrite
-const MAT={ferrite:{f:1,name:'good ferrite'},cracked:{f:0.12,name:'cracked ferrite'},brass:{f:-0.12,name:'brass'},plastic:{f:0,name:'plastic'}};
-const DEF={slug:20,volt:12.4,tool:false,mat:'ferrite'};
+const MAT={ferrite:{f:1,name:'good ferrite'},cracked:{f:0.04,name:'cracked ferrite'},brass:{f:-0.12,name:'brass'},plastic:{f:0,name:'plastic'}};
+const DEF={slug:50,volt:12.4,tool:false,mat:'cracked'};
 const st={...DEF};
 let toolFrac=0; // 0 = tool out, 1 = fully in the coil (animated)
 const overlapOf=d=>Math.pow(d,1.3);
@@ -518,7 +518,7 @@ function drawField(m,t){
 const wcv=document.getElementById('waveCv'),wctx=wcv.getContext('2d');
 function drawWave(m){
   const c=wctx,Wd=wcv.width,Hd=wcv.height;c.clearRect(0,0,Wd,Hd);
-  const L=64,R=Wd-20,T=30,B=Hd-60,mid=(T+B)/2,amp=(B-T)/2*0.78; // amp = spec current
+  const L=64,R=Wd-20,T=30,B=Hd-60,mid=(T+B)/2,amp=(B-T)/2*0.6; // amp = spec current
   // axes
   c.strokeStyle=tok.line;c.lineWidth=1;
   c.beginPath();c.moveTo(L,T);c.lineTo(L,B);c.moveTo(L,mid);c.lineTo(R,mid);c.stroke();
@@ -687,7 +687,7 @@ $('solve').addEventListener('click',()=>{
   else{d=Math.pow((Lneed-L_OUT)/((L_IN-L_OUT)*f),1/1.3);msg.textContent=st.tool?'Set with the tool still inserted. Remove it to see the real width.':'Slug set. The width stays put because the slug itself moved.';}
   slugIn.value=Math.round(Math.min(1,Math.max(0,d))*100);update();
 });
-$('reset').addEventListener('click',()=>{slugIn.value=DEF.slug;voltIn.value=DEF.volt;$('m-ferrite').checked=true;if(st.tool)toolBtn.click();clearMsg();update();});
+$('reset').addEventListener('click',()=>{slugIn.value=DEF.slug;voltIn.value=DEF.volt;$('m-'+DEF.mat).checked=true;if(st.tool)toolBtn.click();clearMsg();update();});
 function ourMac(){slugIn.value=50;voltIn.value=DEF.volt;$('m-cracked').checked=true;if(st.tool)toolBtn.click();update();}
 window.reproduceOurMac=ourMac;
 $('replay').addEventListener('click',()=>{
@@ -727,7 +727,7 @@ requestAnimationFrame(frame);
 /* ---------- Narrow Screen simulator: a 512x342 one-bit Mac behind the bezel ---------- */
 (function(){
 'use strict';
-const MW=512,MH=342,GLASS_W=7.6,GLASS_H=5.4,PIC_H=4.7,OUR_W=8.59,MAXM=128;
+const MW=512,MH=342,GLASS_W=7.6,GLASS_H=5.4,PIC_H=4.7,OUR_W=9.93,MAXM=128;
 const $=id=>document.getElementById(id);
 const crt=$('crt'),cc=crt.getContext('2d');
 const fb=document.createElement('canvas');fb.width=MW;fb.height=MH;
