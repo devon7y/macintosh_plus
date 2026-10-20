@@ -128,6 +128,38 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--copper);outline
 .nextrow p{margin:0;flex:1 1 320px;min-width:0;font-size:14.5px}
 #replay{background:var(--ink);color:var(--panel);border-color:var(--ink)}
 #replay:hover{background:transparent;color:var(--ink)}
+.btnlink{font:600 13.5px var(--f-body);color:var(--copper);text-decoration:none;border:1px solid var(--copper);border-radius:4px;padding:8px 10px}
+.btnlink:hover{background:var(--copper);color:var(--panel)}
+.btnlink:focus-visible{outline:2px solid var(--copper);outline-offset:2px}
+
+/* The fix */
+.fix{display:grid;gap:16px;scroll-margin-top:16px}
+.fix>h2{font-family:var(--f-display);font-size:24px;font-weight:800;margin:6px 0 0}
+.fix>.lede{margin:0;color:var(--muted);max-width:76ch}
+.fix>.lede strong,.fix>.lede em{color:var(--ink)}
+.simgrid{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(0,1fr);gap:16px;align-items:start}
+@media (max-width:900px){.simgrid{grid-template-columns:minmax(0,1fr)}}
+#crt{display:block;width:100%;height:auto;aspect-ratio:1040/760;border-radius:6px;touch-action:none;outline:none}
+#crt:focus-visible{outline:2px solid var(--copper);outline-offset:3px}
+.simrow{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.sim-chain{grid-template-columns:repeat(4,minmax(0,1fr))}
+@media (max-width:620px){.sim-chain{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.trybox{display:grid;gap:10px}
+.trybox h2{margin:0}
+.trybox .note{margin:0;font-size:13px;color:var(--muted)}
+.todo{list-style:none;margin:0;padding:0;display:grid;gap:10px;counter-reset:t}
+.todo li{counter-increment:t;position:relative;padding-left:34px;font-size:14px;min-width:0}
+.todo li::before{content:counter(t);position:absolute;left:0;top:0;width:22px;height:22px;border-radius:50%;border:1.5px solid var(--line);
+  display:grid;place-items:center;font:500 12px var(--f-mono);color:var(--muted)}
+.todo li.done::before{content:"✓";background:var(--good);border-color:var(--good);color:#fff}
+.todo li.done{color:var(--muted)}
+.todo li.done b{color:var(--ink)}
+.simmsg{font-size:13.5px;min-height:1.4em}
+.simmsg.good{color:var(--good);font-weight:600}
+.simbtns{grid-template-columns:repeat(2,minmax(0,1fr))}
+.fix code{font-family:var(--f-mono);font-size:.92em}
+.limits{margin:14px 0 0;font-size:13.5px;color:var(--muted);max-width:90ch}
+.limits a{color:var(--copper)}
 </style>
 </head>
 <body>
@@ -137,7 +169,7 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--copper);outline
       <div class="eyebrow">Macintosh Plus · analog board · L2</div>
       <h1>Width Coil Lab</h1>
     </div>
-    <p class="sub">Our Mac Plus draws its picture too wide for the glass. We traced the cause to one part: the ferrite slug in the width coil. This page shows what we found and the physics behind it.</p>
+    <p class="sub">Our Mac Plus draws its picture too wide for the glass. We traced the cause to one part, the ferrite slug in the width coil, then fixed it without opening the case: a System 6 extension that makes the Mac use a narrower screen. This page shows the diagnosis, the physics and the fix, which you can try yourself.</p>
   </header>
 
   <section class="card finding" aria-labelledby="dx">
@@ -150,8 +182,9 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--copper);outline
       <li><div class="k">Verdict</div><h3>The slug is cracked or isn't ferrite</h3><p>A crack works like an air gap that cancels most of the slug's effect, and a brass or plastic replacement does nothing. Either way it still turns freely and looks normal.</p></li>
     </ol>
     <div class="nextrow">
-      <p><strong>Next:</strong> confirm by holding a fridge magnet to the slug (real ferrite is attracted), then swap in the slug or the whole L2 coil from our donor Mac (M0001), which uses the same part.</p>
+      <p><strong>The hardware fix</strong> would be to swap in the slug or the whole L2 coil from our donor Mac (M0001). That means working inside the case, next to the picture tube's high-voltage anode. Devon had a better idea: leave the hardware alone and teach the Mac to use a narrower screen.</p>
       <button id="replay" type="button">Reproduce our Mac</button>
+      <a class="btnlink" href="#fix">Try the software fix</a>
     </div>
   </section>
 
@@ -262,7 +295,78 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--copper);outline
     </div>
   </section>
 
-  <p class="foot">Illustrative model, not a circuit simulation. Fixed points: the 7.0 in target width and 11.90–12.75 V range come from Apple's Mac Plus service manual; the coil's 12–44 µH range is a bench measurement of a Plus board's L2 with the slug out and in (Retro Repairs &amp; Refurbs); the Plus scans about 22,000 lines per second. The yoke inductance, the material factors and the rest of the scaling are chosen to show the behaviour. The diagnosis comes from our own bench observations; the magnet test and slug swap will confirm it.</p>
+  <section class="fix" id="fix" aria-labelledby="fixh">
+    <div class="eyebrow">The fix</div>
+    <h2 id="fixh">Narrow Screen: fixing it in software</h2>
+    <p class="lede">Software can't change how far the beam swings: the Plus always draws the same 512 × 342 pixels, and the broken coil stretches them past the glass. But nothing forces the Mac to <em>use</em> every column. Devon's idea was to tell the system the screen is narrower than it is, so the menu bar, icons, windows and dialogs all land on the part of the glass you can see. That became <strong>Narrow Screen</strong>, a System 6 extension with its own Control Panel. Below is a working simulation of it on our Mac.</p>
+
+    <div class="simgrid">
+      <div class="card simcard">
+        <canvas id="crt" tabindex="0" aria-label="Simulated Macintosh Plus screen behind its bezel. Use the mouse on the screen like a Mac: open the Apple menu, choose Control Panel, set the Narrow Screen margins and restart." aria-describedby="simStatus"></canvas>
+        <div class="simrow">
+          <span id="simStatus" class="status s-bad" aria-live="polite">The Apple menu and the Trash are behind the bezel</span>
+        </div>
+        <div class="chain sim-chain">
+          <div class="cell"><div class="k">Picture width</div><div class="v" id="sW">0<small>in</small></div></div>
+          <div class="cell"><div class="k">Hidden each side</div><div class="v" id="sH">0<small>px</small></div></div>
+          <div class="cell"><div class="k">Margins in use</div><div class="v" id="sNow">0 · 0</div></div>
+          <div class="cell"><div class="k">After restart</div><div class="v" id="sNext">0 · 0</div></div>
+        </div>
+      </div>
+
+      <aside class="card trybox" aria-labelledby="tryh">
+        <h2 id="tryh">Try it</h2>
+        <p class="note">Use the screen like a Mac: point, click, and drag the slider boxes. The picture width comes from the lab above.</p>
+        <ol class="todo">
+          <li id="t1"><b>Find the Apple menu.</b> It's under the bezel at the far left of the menu bar. Click there anyway: the Mac doesn't know it's hidden.</li>
+          <li id="t2"><b>Choose Control Panel</b>, then click <b>Narrow Screen</b> in its list.</li>
+          <li id="t3"><b>Set the margins.</b> Drag <b>Left</b> and <b>Right</b> until each dotted line sits just inside the glass.</li>
+          <li id="t4"><b>Click Restart.</b> The new margins apply at startup. Hold Shift while it starts to skip them for one boot.</li>
+        </ol>
+        <div id="simMsg" class="simmsg" aria-live="polite"></div>
+        <div class="btns simbtns">
+          <button id="sOpen" type="button">Open Control Panel</button>
+          <button id="sRestart" type="button">Restart the Mac</button>
+          <button id="sXray" type="button" aria-pressed="false">Show hidden edges</button>
+          <button id="sOurs" type="button">Use our Mac's width</button>
+          <button id="sReset" type="button">Reset</button>
+        </div>
+      </aside>
+    </div>
+
+    <ol class="steps">
+      <li>
+        <h3>It paints the margins black</h3>
+        <p>Narrow Screen loads at startup, before the Finder, and blacks out the columns you chose in its Control Panel. From then on they stay empty.</p>
+      </li>
+      <li>
+        <h3>It moves the screen's left edge</h3>
+        <p>The low-memory global <code>ScrnBase</code> holds the address of the screen's first pixel. Narrow Screen moves it right by the left margin, so every program's pixel (0, 0) and the mouse move with it.</p>
+        <span class="eq">16 pixels = 1 word: the left edge moves in 16-pixel steps</span>
+      </li>
+      <li>
+        <h3>It reports a narrower screen</h3>
+        <p>Programs learn the screen's size from QuickDraw when they start. On the Plus, the ROM answers with a hard-coded 512 × 342. Narrow Screen replaces that answer (trap <code>ScrnBitMap</code>, $A833) with 512 − left − right.</p>
+        <span class="eq">screen width = 512 − left margin − right margin</span>
+      </li>
+      <li>
+        <h3>It fences in the mouse</h3>
+        <p>The cursor's limits (<code>CrsrPin</code>) shrink to the new width, so the pointer can't wander behind the bezel. The Finder, the menu bar and every dialog that asks QuickDraw for the screen size now fit on the glass.</p>
+      </li>
+    </ol>
+
+    <div class="card">
+      <h2>Why software beat the screwdriver</h2>
+      <div class="fails">
+        <div><h3>No high voltage</h3><p>The width coil sits on the analog board, inches from the flyback and the picture tube's high-voltage anode, which can hold a dangerous charge long after the Mac is unplugged. A Control Panel is safer than a discharge tool.</p></div>
+        <div><h3>No spare part</h3><p>A working slug would have to come out of a donor Mac. Narrow Screen needs nothing but a floppy, and its sliders adapt to however much this particular tube hides on each side.</p></div>
+        <div><h3>Fully reversible</h3><p>Set both margins to 0 and it does nothing, so it can stay installed even if the coil is fixed one day. Holding Shift at startup skips it for one boot.</p></div>
+      </div>
+      <p class="limits"><strong>Limits:</strong> programs that assume a 512-pixel screen still draw into the hidden edges, and the "system error" box is drawn at a fixed spot. It only works with the Mac Plus ROM; on other Macs it does nothing. Narrow Screen is built and tested in an emulated Mac Plus (MAME); installing it on our real Plus is the last step. Source: <a href="https://github.com/devon7y/macintosh_plus/tree/main/narrowscreen">narrowscreen/</a>.</p>
+    </div>
+  </section>
+
+  <p class="foot">Illustrative model, not a circuit simulation. Fixed points: the 7.0 in target width and 11.90–12.75 V range come from Apple's Mac Plus service manual; the coil's 12–44 µH range is a bench measurement of a Plus board's L2 with the slug out and in (Retro Repairs &amp; Refurbs); the Plus scans about 22,000 lines per second. The yoke inductance, the material factors and the rest of the scaling are chosen to show the behaviour. The diagnosis comes from our own bench observations. The Narrow Screen simulation redraws the real Control Panel's layout and behaviour (Left 0–128 px in 16-pixel steps, Right 0–128 px in 1-pixel steps); its pixels are hidden by the same bezel model as the front view.</p>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -565,6 +669,7 @@ function update(){
   drawFront(model);drawFaceTex(model);drawWave(model);
   if(reduce)drawField(model,0);
   field.material.opacity=Math.max(0.04,0.08+0.5*((model.L-L_OUT)/(L_IN+TOOL_L-L_OUT)));
+  window.macPictureWidth=model.W;document.dispatchEvent(new CustomEvent('macwidth',{detail:model.W}));
 }
 const clearMsg=()=>{$('solveMsg').textContent='';};
 slugIn.addEventListener('input',()=>{clearMsg();update();});
@@ -583,8 +688,10 @@ $('solve').addEventListener('click',()=>{
   slugIn.value=Math.round(Math.min(1,Math.max(0,d))*100);update();
 });
 $('reset').addEventListener('click',()=>{slugIn.value=DEF.slug;voltIn.value=DEF.volt;$('m-ferrite').checked=true;if(st.tool)toolBtn.click();clearMsg();update();});
+function ourMac(){slugIn.value=50;voltIn.value=DEF.volt;$('m-cracked').checked=true;if(st.tool)toolBtn.click();update();}
+window.reproduceOurMac=ourMac;
 $('replay').addEventListener('click',()=>{
-  slugIn.value=50;voltIn.value=DEF.volt;$('m-cracked').checked=true;if(st.tool)toolBtn.click();update();
+  ourMac();
   $('solveMsg').textContent='Our Mac: a cracked slug. Sweep the slug slider and the width barely moves. Then insert the steel screwdriver and watch it narrow.';
   document.querySelector('.controls').scrollIntoView({behavior:reduce?'auto':'smooth',block:'start'});
 });
@@ -614,6 +721,309 @@ slug.position.y=1.75-1.75*model.d;tool.position.y=toolY;
 applyTheme();drawField(model,0);
 if(document.fonts&&document.fonts.ready)document.fonts.ready.then(update);
 requestAnimationFrame(frame);
+})();
+</script>
+<script>
+/* ---------- Narrow Screen simulator: a 512x342 one-bit Mac behind the bezel ---------- */
+(function(){
+'use strict';
+const MW=512,MH=342,GLASS_W=7.6,GLASS_H=5.4,PIC_H=4.7,OUR_W=8.59,MAXM=128;
+const $=id=>document.getElementById(id);
+const crt=$('crt'),cc=crt.getContext('2d');
+const fb=document.createElement('canvas');fb.width=MW;fb.height=MH;
+const g=fb.getContext('2d',{willReadFrequently:true});
+const out=document.createElement('canvas');out.width=MW;out.height=MH;
+const oc=out.getContext('2d'),outImg=oc.createImageData(MW,MH);
+const bits=new Uint8Array(MW*MH);
+const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const FONT='8px Silkscreen, monospace';
+const B='#000',W='#fff';
+let ASC=5;
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+
+/* ---- drawing primitives (pixel coordinates, black and white only) ---- */
+function patt(rows){const c=document.createElement('canvas');c.width=rows[0].length;c.height=rows.length;const x=c.getContext('2d');
+  rows.forEach((r,y)=>{for(let i=0;i<r.length;i++){x.fillStyle=r[i]==='X'?B:W;x.fillRect(i,y,1,1);}});return g.createPattern(c,'repeat');}
+const GRAY=patt(['X.','.X']),DIM=patt(['.X','XX']);
+function fill(x,y,w,h,c){g.fillStyle=c;g.fillRect(x,y,w,h);}
+function frame(x,y,w,h,c){g.fillStyle=c||B;g.fillRect(x,y,w,1);g.fillRect(x,y+h-1,w,1);g.fillRect(x,y,1,h);g.fillRect(x+w-1,y,1,h);}
+function box(x,y,w,h){fill(x,y,w,h,W);frame(x,y,w,h);}
+function tw(s){g.font=FONT;return Math.round(g.measureText(s).width);}
+function text(s,x,y,c){g.font=FONT;g.textBaseline='alphabetic';g.textAlign='left';g.fillStyle=c||B;g.fillText(s,Math.round(x),Math.round(y));}
+const BL=(top,h)=>top+Math.floor((h+ASC)/2);
+function wrap(s,width){const words=s.split(' '),lines=[];let cur='';for(const w of words){const t=cur?cur+' '+w:w;if(tw(t)>width&&cur){lines.push(cur);cur=w;}else cur=t;}if(cur)lines.push(cur);return lines;}
+function para(s,x,y,width,lh){wrap(s,width).forEach((l,i)=>text(l,x,y+ASC+i*lh));}
+function blit(rows,x,y,inv){for(let j=0;j<rows.length;j++){const r=rows[j];for(let i=0;i<r.length;i++){const ch=r[i];if(ch==='.')continue;
+  g.fillStyle=((ch==='X')!==!!inv)?B:W;g.fillRect(x+i,y+j,1,1);}}}
+function rrPath(c,x,y,w,h,r){c.beginPath();c.moveTo(x+r,y);c.arcTo(x+w,y,x+w,y+h,r);c.arcTo(x+w,y+h,x,y+h,r);c.arcTo(x,y+h,x,y,r);c.arcTo(x,y,x+w,y,r);c.closePath();}
+
+const APPLE=['......XX....','.....XX.....','.....X......','..XXX.XXXX..','.XXXXXXXXXX.','XXXXXXXXXX..','XXXXXXXXX...','XXXXXXXXX...','XXXXXXXXXX..','.XXXXXXXXXXX','.XXXXXXXXXX.','..XXXX.XXX..'];
+const ARROW=['X...........','XX..........','XoX.........','XooX........','XoooX.......','XooooX......','XoooooX.....','XooooooX....','XoooooooX...','XooooooooX..','XoooooXXXXX.','XooXooX.....','XoX.XooX....','XX..XooX....','X....XooX...','.....XooX...','......XX....'];
+const AL=['....X....','...XX....','..XoXXXXX','.XoooooOX','XoooooooX','.XoooooOX','..XoXXXXX','...XX....','....X....'].map(r=>r.replace(/O/g,'o'));
+const AR=AL.map(r=>r.split('').reverse().join(''));
+const AU=['....X....','...XoX...','..XoooX..','.XoooooX.','XXXoooXXX','..XoooX..','..XoooX..','..XXXXX..'];
+const AD=AU.slice().reverse();
+
+/* 32x32 icons drawn from rectangles; f = outline colour, b = fill colour (swap them to select) */
+const ICONS={
+  disk(x,y,f,b){fill(x+3,y+3,26,26,b);frame(x+3,y+3,26,26,f);fill(x+9,y+3,14,11,f);fill(x+18,y+5,3,7,b);
+    fill(x+8,y+17,16,12,b);frame(x+8,y+17,16,12,f);fill(x+10,y+20,12,1,f);fill(x+10,y+23,12,1,f);fill(x+27,y+3,2,2,b);},
+  trash(x,y,f,b){fill(x+13,y+2,6,4,b);frame(x+13,y+2,6,4,f);fill(x+6,y+5,20,3,b);frame(x+6,y+5,20,3,f);
+    fill(x+8,y+8,16,22,b);frame(x+8,y+8,16,22,f);[12,16,20].forEach(c=>fill(x+c,y+11,1,16,f));},
+  folder(x,y,f,b){fill(x+3,y+7,11,4,b);frame(x+3,y+7,11,4,f);fill(x+3,y+10,26,18,b);frame(x+3,y+10,26,18,f);},
+  doc(x,y,f,b){fill(x+7,y+3,18,26,b);frame(x+7,y+3,18,26,f);fill(x+19,y+3,6,6,b);fill(x+19,y+3,1,6,f);fill(x+19,y+8,6,1,f);
+    for(let i=0;i<5;i++)fill(x+10,y+12+i*3,i===4?8:12,1,f);},
+  general(x,y,f,b){fill(x+3,y+5,26,22,b);frame(x+3,y+5,26,22,f);fill(x+3,y+9,26,1,f);
+    [13,18,23].forEach((yy,i)=>{fill(x+7,y+yy,18,1,f);fill(x+9+i*5,y+yy-2,3,5,f);});},
+  keyboard(x,y,f,b){fill(x+2,y+11,28,12,b);frame(x+2,y+11,28,12,f);for(let r=0;r<3;r++)for(let k=0;k<8;k++)fill(x+5+k*3,y+14+r*3,2,1,f);},
+  mouse(x,y,f,b){fill(x+16,y+2,1,7,f);fill(x+10,y+9,13,19,b);frame(x+10,y+9,13,19,f);fill(x+10,y+14,13,1,f);fill(x+10,y+9,1,1,b);fill(x+22,y+9,1,1,b);fill(x+10,y+27,1,1,b);fill(x+22,y+27,1,1,b);},
+  narrow(x,y,f,b){fill(x+7,y+2,18,26,b);frame(x+7,y+2,18,26,f);fill(x+9,y+4,14,12,f);fill(x+9,y+24,14,1,f);fill(x+9,y+29,14,2,f);
+    [[11,10],[12,9],[12,11],[13,8],[13,12]].forEach(([dx,dy])=>fill(x+dx,y+dy,1,1,b));
+    [[20,10],[19,9],[19,11],[18,8],[18,12]].forEach(([dx,dy])=>fill(x+dx,y+dy,1,1,b));fill(x+11,y+10,3,1,b);fill(x+18,y+10,3,1,b);}
+};
+function icon(kind,x,y,label,sel){
+  ICONS[kind](x,y,sel?W:B,sel?B:W);
+  if(label!=null){const w=tw(label)+4,lx=x+16-Math.floor(w/2);fill(lx,y+33,w,11,sel?B:W);text(label,lx+2,BL(y+33,11),sel?W:B);}
+}
+function happyMac(x,y){fill(x,y,30,40,W);frame(x,y,30,40);frame(x+4,y+4,22,17);fill(x+10,y+8,1,3,B);fill(x+19,y+8,1,3,B);
+  fill(x+15,y+9,1,4,B);fill(x+14,y+12,1,1,B);fill(x+10,y+15,1,1,B);fill(x+11,y+16,8,1,B);fill(x+19,y+15,1,1,B);
+  fill(x+16,y+27,9,1,B);fill(x+3,y+34,4,1,B);frame(x+2,y+40,26,3);}
+
+/* ---- the Mac's state ---- */
+const MENUS=[
+  {k:'apple',items:[['About the Finder...',0],'-',['Alarm Clock',0],['Calculator',0],['Chooser',0],['Control Panel',1],['Key Caps',0],['Scrapbook',0]]},
+  {k:'File',items:[['New Folder',0],['Open',0],['Print',0],['Close',0],'-',['Get Info',0],['Duplicate',0],['Put Away',0],'-',['Page Setup...',0],['Print Directory...',0],'-',['Eject',0]]},
+  {k:'Edit',items:[['Undo',0],'-',['Cut',0],['Copy',0],['Paste',0],['Clear',0],['Select All',0],'-',['Show Clipboard',0]]},
+  {k:'View',items:[['by Small Icon',0],['by Icon',0],['by Name',0],['by Date',0],['by Size',0],['by Kind',0]]},
+  {k:'Special',items:[['Clean Up Window',0],['Empty Trash',0],'-',['Erase Disk...',0],['Set Startup...',0],'-',['Restart',1],['Shut Down',0]]}];
+let titles=[];
+function layoutTitles(){let x=10;titles=MENUS.map(m=>{const w=m.k==='apple'?26:tw(m.k)+16;const t={k:m.k,x,w,m};x+=w;return t;});}
+const CP_ITEMS=[['general','General'],['keyboard','Keyboard'],['mouse','Mouse'],['narrow','Narrow Screen']];
+const LBAR={l:148,t:72,r:268},RBAR={l:148,t:100,r:268},BTN={l:225,t:220,r:305,b:240};
+function freshWindows(){return[{id:'tools',title:'System Tools',x:56,y:62,w:290,h:152,open:true},{id:'cp',title:'Control Panel',x:60,y:40,w:324,h:275,open:false}];}
+function freshState(){return{L:0,R:0,setL:0,setR:0,boot:null,menu:null,sticky:false,hover:-1,win:freshWindows(),cp:'general',sel:null,
+  cur:{x:300,y:150},xray:S?S.xray:false,saw:{apple:false,narrow:false},restarted:false,skipped:false,press:null,lastClick:null,shift:false,focusBar:'L'};}
+let S=null;S=freshState();
+let picW=OUR_W;
+const SW=()=>MW-S.L-S.R;
+const openWins=()=>S.win.filter(w=>w.open);
+const front=()=>{const o=openWins();return o[o.length-1]||null;};
+function toFront(w){S.win=S.win.filter(v=>v!==w);S.win.push(w);}
+
+/* ---- scene ---- */
+function corners(sw){const k=[5,3,2,1,1];for(let i=0;i<5;i++){fill(0,i,k[i],1,B);fill(sw-k[i],i,k[i],1,B);fill(0,MH-1-i,k[i],1,B);fill(sw-k[i],MH-1-i,k[i],1,B);}}
+function drawMenuBar(sw){fill(0,0,sw,19,W);fill(0,19,sw,1,B);
+  for(const t of titles){const open=S.menu===t.k;if(open)fill(t.x,0,t.w,19,B);
+    if(t.k==='apple')blit(APPLE,t.x+7,3,open);else text(t.k,t.x+8,BL(0,19),open?W:B);}}
+function menuRect(t){const w=Math.max(110,Math.max(...t.m.items.map(i=>i==='-'?0:tw(i[0])))+30);return{x:t.x,y:19,w,h:t.m.items.length*16+2};}
+function drawMenu(){const t=titles.find(v=>v.k===S.menu);if(!t)return;const r=menuRect(t);
+  fill(r.x+1,r.y+1,r.w,r.h,B);box(r.x,r.y,r.w,r.h);
+  t.m.items.forEach((it,i)=>{const y=r.y+1+i*16;
+    if(it==='-'){g.fillStyle=GRAY;g.fillRect(r.x+1,y+8,r.w-2,1);return;}
+    const hot=i===S.hover&&it[1];if(hot)fill(r.x+1,y,r.w-2,16,B);
+    text(it[0],r.x+14,BL(y,16),hot?W:(it[1]?B:DIM));});}
+function drawTools(w){const cw=w.w-2;text('3 items',8,BL(0,16));const s='612K in disk',a='188K available';text(s,Math.round(cw/2-tw(s)/2),BL(0,16));text(a,cw-8-tw(a),BL(0,16));
+  fill(0,16,cw,1,B);fill(0,18,cw,1,B);
+  icon('folder',30,34,'System Folder',false);icon('folder',122,34,'Utilities',false);icon('doc',214,34,'Read Me',false);}
+function hbar(b,val,max,part){const w=b.r-b.l;box(b.l,b.t,w,16);g.fillStyle=GRAY;g.fillRect(b.l+16,b.t+1,w-32,14);
+  frame(b.l,b.t,16,16);frame(b.r-16,b.t,16,16);
+  if(part==='ldn')fill(b.l+1,b.t+1,14,14,B);if(part==='rdn')fill(b.r-15,b.t+1,14,14,B);
+  blit(AL,b.l+3,b.t+3,part==='ldn');blit(AR,b.r-12,b.t+3,part==='rdn');
+  box(thumbX(b,val,max),b.t,16,16);}
+const thumbX=(b,val,max)=>b.l+16+Math.round(val/max*(b.r-b.l-48));
+function drawCP(active){
+  fill(70,0,1,240,B);fill(86,0,1,255,B);fill(0,240,87,1,B);
+  frame(70,0,17,16);blit(AU,74,4);g.fillStyle=GRAY;g.fillRect(71,16,15,208);frame(70,224,17,16);blit(AD,74,228);box(70,16,17,16);
+  text('3.3',6,BL(241,14));
+  CP_ITEMS.forEach(([k,label],i)=>{const y=8+i*58,sel=S.cp===k;ICONS[k](19,y,B,W);
+    let l=label;while(tw(l)>64&&l.length>3)l=l.slice(0,-1);if(l!==label)l=l.slice(0,-1)+'...';
+    const lw=tw(l)+4,lx=35-Math.floor(lw/2);fill(lx,y+33,lw,11,sel?B:W);text(l,lx+2,BL(y+33,11),sel?W:B);});
+  if(S.cp!=='narrow'){para('Only the Narrow Screen panel works in this simulation. Click its icon on the left.',100,14,210,13);return;}
+  text('Narrow Screen',100,BL(10,16));
+  para('Margins hidden behind the bezel, in pixels:',100,32,212,13);
+  text('Left',100,BL(72,16));hbar(LBAR,S.setL,MAXM,S.press&&S.press.bar==='L'?S.press.part:null);text(String(S.setL),276,BL(72,16));
+  text('Right',100,BL(100,16));hbar(RBAR,S.setR,MAXM,S.press&&S.press.bar==='R'?S.press.part:null);text(String(S.setR),276,BL(100,16));
+  para('The lines on screen mark the new edges. Left moves in 16-pixel steps. Restart to apply. Hold Shift while starting up to skip.',100,130,212,13);
+  const dn=S.press&&S.press.type==='button'&&S.press.inside;
+  g.save();rrPath(g,BTN.l+.5,BTN.t+.5,BTN.r-BTN.l-1,BTN.b-BTN.t-1,8);g.fillStyle=dn?B:W;g.fill();g.lineWidth=1;g.strokeStyle=B;g.stroke();g.restore();
+  const s='Restart';text(s,Math.round((BTN.l+BTN.r)/2-tw(s)/2),BL(BTN.t,20),dn?W:B);}
+function drawWin(w,active){const{x,y}=w;fill(x+1,y+1,w.w,w.h,B);box(x,y,w.w,w.h);fill(x,y+18,w.w,1,B);
+  if(active){for(let i=0;i<6;i++)fill(x+2,y+4+i*2,w.w-4,1,B);fill(x+7,y+3,13,13,W);frame(x+8,y+4,11,11);
+    if(S.press&&S.press.type==='close'&&S.press.w===w&&S.press.inside){fill(x+10,y+6,7,7,B);}}
+  const t=w.title,tl=tw(t),tx=x+Math.round((w.w-tl)/2);fill(tx-6,y+1,tl+12,17,W);text(t,tx,BL(y+1,17));
+  g.save();g.beginPath();g.rect(x+1,y+19,w.w-2,w.h-20);g.clip();g.translate(x+1,y+19);
+  if(w.id==='cp')drawCP(active);else drawTools(w);g.restore();}
+function drawDesktop(){const sw=SW();g.fillStyle=GRAY;g.fillRect(0,0,sw,MH);drawMenuBar(sw);
+  icon('disk',sw-50,27,'System Tools',S.sel==='disk');icon('trash',sw-50,MH-64,'Trash',S.sel==='trash');
+  const f=front();for(const w of S.win)if(w.open)drawWin(w,w===f);
+  if(S.menu)drawMenu();corners(sw);}
+function drawBoot(){const p=S.boot.phase;fill(0,0,MW,MH,B);if(p==='black')return;
+  g.fillStyle=GRAY;g.fillRect(0,0,MW,MH);
+  if(p==='happy'){happyMac(241,148);return;}
+  const bx=146,by=146,bw=220,bh=48;fill(bx+1,by+1,bw,bh,B);box(bx,by,bw,bh);frame(bx+3,by+3,bw-6,bh-6);
+  const s='Welcome to Macintosh.';text(s,Math.round(MW/2-tw(s)/2),BL(by,bh));
+  if(p==='init'&&!S.boot.skip){fill(0,0,S.boot.L,MH,B);fill(MW-S.boot.R,0,S.boot.R,MH,B);}}
+function drawScene(){g.setTransform(1,0,0,1,0,0);fill(0,0,MW,MH,B);
+  if(S.boot){drawBoot();return;}
+  g.save();g.beginPath();g.rect(S.L,0,SW(),MH);g.clip();g.translate(S.L,0);drawDesktop();g.restore();}
+function compose(){drawScene();const d=g.getImageData(0,0,MW,MH).data;
+  for(let i=0,p=0;i<bits.length;i++,p+=4)bits[i]=d[p]<128?1:0;
+  const cp=S.win.find(w=>w.id==='cp');
+  if(!S.boot&&cp.open&&S.cp==='narrow'){[S.setL,MW-1-S.setR].forEach(x=>{for(let y=0;y<MH;y++)if((y>>1)&1)bits[y*MW+x]^=1;});}
+  if(!S.boot||S.boot.phase==='welcome'||S.boot.phase==='init'){const cx=S.cur.x,cy=S.cur.y;
+    ARROW.forEach((r,j)=>{for(let i=0;i<r.length;i++){const ch=r[i];if(ch==='.')continue;const x=cx+i,y=cy+j;if(x<0||x>=MW||y<0||y>=MH)continue;bits[y*MW+x]=ch==='X'?1:0;}});}
+  const o=outImg.data;
+  for(let i=0,p=0;i<bits.length;i++,p+=4){if(bits[i]){o[p]=24;o[p+1]=29;o[p+2]=32;}else{o[p]=228;o[p+1]=237;o[p+2]=241;}o[p+3]=255;}
+  oc.putImageData(outImg,0,0);}
+
+/* ---- the CRT: case, bezel, glass and the over-wide raster ---- */
+let geo={rx:0,ry:0,rw:1,rh:1};
+function drawCRT(){const Wc=crt.width,Hc=crt.height,c=cc;if(!Wc||!Hc)return;
+  c.setTransform(1,0,0,1,0,0);c.clearRect(0,0,Wc,Hc);
+  const ppi=Wc/10.4,cx=Wc/2,cy=Hc*0.455,gw=GLASS_W*ppi,gh=GLASS_H*ppi,gx=cx-gw/2,gy=cy-gh/2;
+  c.fillStyle='#D9D2C2';rrPath(c,0,0,Wc,Hc,ppi*0.3);c.fill();
+  c.fillStyle='#C7BFAE';rrPath(c,gx-ppi*0.42,gy-ppi*0.42,gw+ppi*0.84,gh+ppi*0.84,ppi*0.5);c.fill();
+  c.fillStyle='#B3AB99';rrPath(c,gx-ppi*0.16,gy-ppi*0.16,gw+ppi*0.32,gh+ppi*0.32,ppi*0.4);c.fill();
+  const rw=picW*ppi,rh=PIC_H*ppi,rx=cx-rw/2,ry=cy-rh/2;geo={rx,ry,rw,rh};
+  c.save();rrPath(c,gx,gy,gw,gh,ppi*0.34);c.clip();c.fillStyle='#1B2226';c.fillRect(gx,gy,gw,gh);
+  c.imageSmoothingEnabled=false;c.drawImage(out,rx,ry,rw,rh);
+  const sh=c.createRadialGradient(cx,cy,gh*0.2,cx,cy,gw*0.7);sh.addColorStop(0,'rgba(255,255,255,0)');sh.addColorStop(1,'rgba(0,0,0,.22)');
+  c.fillStyle=sh;c.fillRect(gx,gy,gw,gh);c.restore();
+  if(S.xray){c.save();c.beginPath();c.rect(rx,ry,rw,rh);rrPath(c,gx,gy,gw,gh,ppi*0.34);c.clip('evenodd');
+    c.globalAlpha=.42;c.imageSmoothingEnabled=false;c.drawImage(out,rx,ry,rw,rh);c.restore();
+    c.save();c.setLineDash([ppi*0.08,ppi*0.06]);c.strokeStyle='#A9572A';c.lineWidth=Math.max(1,ppi*0.02);c.strokeRect(rx,ry,rw,rh);c.restore();
+    const H=hiddenPx();if(H>0.5){c.font=`500 ${Math.round(ppi*0.15)}px "IBM Plex Mono", monospace`;c.fillStyle='#5A4A38';c.textAlign='center';c.textBaseline='top';
+      c.fillText(`${Math.ceil(H)} px hidden`,Math.max(ppi*0.6,rx+(gx-rx)/2),ry+rh+ppi*0.12);c.fillText(`${Math.ceil(H)} px hidden`,Math.min(Wc-ppi*0.6,gx+gw+(rx+rw-gx-gw)/2),ry+rh+ppi*0.12);}}
+  c.fillStyle='#8B8473';c.font=`600 ${Math.round(ppi*0.17)}px "IBM Plex Sans", sans-serif`;c.textAlign='left';c.textBaseline='alphabetic';
+  c.fillText('Macintosh Plus',ppi*0.55,Hc-ppi*0.4);}
+
+/* ---- status, checklist ---- */
+function hiddenPx(){return picW<=GLASS_W?0:(picW-GLASS_W)/2/picW*MW;}
+function need(){const H=Math.ceil(hiddenPx()-1e-6);return{H,L:Math.ceil(H/16)*16,R:H};}
+function refresh(){const n=need(),ok=S.L>=n.L&&S.R>=n.R,pend=S.setL>=n.L&&S.setR>=n.R;
+  $('sW').innerHTML=picW.toFixed(2)+'<small>in</small>';$('sH').innerHTML=Math.ceil(hiddenPx())+'<small>px</small>';
+  $('sNow').textContent=`${S.L} · ${S.R}`;$('sNext').textContent=`${S.setL} · ${S.setR}`;
+  const st=$('simStatus');let cls,txt;
+  if(S.boot){cls='s-warn';txt='Restarting…';}
+  else if(ok&&n.H===0&&!S.L&&!S.R){cls='s-good';txt='The picture fits the glass: no margins needed';}
+  else if(ok&&(S.L-n.L>=32||S.R-n.R>=24)){cls='s-warn';txt='Everything fits, but the margins are wider than needed';}
+  else if(ok){cls='s-good';txt='Everything is on the glass';}
+  else if(pend&&(S.setL!==S.L||S.setR!==S.R)){cls='s-warn';txt='Restart to apply the new margins';}
+  else{cls='s-bad';txt=S.L<n.L&&S.R<n.R?'The Apple menu and the Trash are behind the bezel':S.L<n.L?'The left edge is still behind the bezel':'The right edge is still behind the bezel';}
+  st.className='status '+cls;st.textContent=txt;
+  const done=[S.saw.apple,S.saw.narrow,pend,S.restarted&&ok&&!S.skipped&&(n.H>0||S.saw.narrow)];
+  done.forEach((d,i)=>$('t'+(i+1)).classList.toggle('done',!!d));
+  const m=$('simMsg');m.className='simmsg';
+  if(S.skipped&&!S.boot)m.textContent='Shift was held, so Narrow Screen skipped this startup. Restart again without Shift.';
+  else if(done[3]){m.className='simmsg good';m.textContent='Fixed in software. The Apple menu, the disk icon and the Trash are all on the glass, and the mouse stops at the new edges.';}
+  else if(n.H===0)m.textContent='The lab above is set so the picture fits the glass, so nothing is hidden. Use our Mac\'s width to see the problem.';
+  else m.textContent='';
+  $('sXray').setAttribute('aria-pressed',S.xray);$('sXray').textContent=S.xray?'Hide hidden edges':'Show hidden edges';}
+let queued=false;
+function request(){if(queued)return;queued=true;requestAnimationFrame(()=>{queued=false;compose();drawCRT();refresh();});}
+
+/* ---- input: map the real pointer onto the Mac's screen ---- */
+function toMac(e){const r=crt.getBoundingClientRect();const sx=(e.clientX-r.left)*crt.width/r.width,sy=(e.clientY-r.top)*crt.height/r.height;
+  return{x:(sx-geo.rx)/geo.rw*MW,y:(sy-geo.ry)/geo.rh*MH,inside:sx>=geo.rx&&sx<geo.rx+geo.rw&&sy>=geo.ry&&sy<geo.ry+geo.rh};}
+function moveCursor(p){S.cur.x=clamp(Math.floor(p.x),S.L,MW-1-S.R);S.cur.y=clamp(Math.floor(p.y),0,MH-1);}
+const G=()=>({x:S.cur.x-S.L,y:S.cur.y});
+const inR=(p,x,y,w,h)=>p.x>=x&&p.x<x+w&&p.y>=y&&p.y<y+h;
+function titleAt(p){return p.y<19?titles.find(t=>p.x>=t.x&&p.x<t.x+t.w):null;}
+function itemAt(p){const t=titles.find(v=>v.k===S.menu);if(!t)return-1;const r=menuRect(t);if(!inR(p,r.x,r.y+1,r.w,r.h-2))return-1;const i=Math.floor((p.y-r.y-1)/16);const it=t.m.items[i];return it&&it!=='-'?i:-1;}
+function winAt(p){const o=openWins();for(let i=o.length-1;i>=0;i--){const w=o[i];if(inR(p,w.x,w.y,w.w+1,w.h+1))return w;}return null;}
+function local(w,p){return{x:p.x-w.x-1,y:p.y-w.y-19};}
+function barPart(b,val,max,q){if(!inR(q,b.l,b.t,b.r-b.l,16))return null;if(q.x<b.l+16)return'ldn';if(q.x>=b.r-16)return'rdn';
+  const tx=thumbX(b,val,max);if(q.x<tx)return'lpg';if(q.x>=tx+16)return'rpg';return'thumb';}
+function setBar(bar,v){if(bar==='L')S.setL=clamp(Math.round(v/16)*16,0,MAXM);else S.setR=clamp(Math.round(v),0,MAXM);}
+function stepBar(bar,part){const arrow=bar==='L'?16:1,page=bar==='L'?32:8,cur=bar==='L'?S.setL:S.setR;
+  const d={ldn:-arrow,rdn:arrow,lpg:-page,rpg:page}[part]||0;setBar(bar,cur+d);}
+let rep=null;
+function stopRepeat(){if(rep){clearTimeout(rep.t);clearInterval(rep.i);rep=null;}}
+function startRepeat(bar,part){stopRepeat();stepBar(bar,part);request();
+  rep={t:setTimeout(()=>{rep.i=setInterval(()=>{const b=bar==='L'?LBAR:RBAR,val=bar==='L'?S.setL:S.setR;
+    if(part==='lpg'||part==='rpg'){const q=S.press&&S.press.q;if(q){const tx=thumbX(b,val,MAXM);if((part==='lpg'&&q.x>=tx)||(part==='rpg'&&q.x<tx+16))return;}}
+    stepBar(bar,part);request();},70);},350)};}
+function openCP(selectNarrow){const w=S.win.find(v=>v.id==='cp');w.open=true;toFront(w);if(selectNarrow){S.cp='narrow';S.saw.narrow=true;}S.menu=null;request();}
+function menuAction(k,i){const it=MENUS.find(m=>m.k===k).items[i];if(!it||!it[1])return;
+  if(it[0]==='Control Panel')openCP(false);else if(it[0]==='Restart')restart(false);}
+function mouseDown(e){if(S.boot)return;const p=G();
+  const t=titleAt(p);
+  if(t){S.menu=t.k;S.sticky=false;S.hover=-1;S.press={type:'menu'};if(t.k==='apple')S.saw.apple=true;return;}
+  if(S.menu){const i=itemAt(p);if(i>=0){S.press={type:'menu'};S.hover=i;return;}S.menu=null;return;}
+  const w=winAt(p);
+  if(w){const was=front()===w;toFront(w);
+    if(p.y<w.y+19){if(was&&inR(p,w.x+7,w.y+3,13,13)){S.press={type:'close',w,inside:true};return;}
+      S.press={type:'drag',w,ox:p.x-w.x,oy:p.y-w.y};return;}
+    if(w.id==='cp'){const q=local(w,p);
+      if(q.x<70){CP_ITEMS.forEach(([k],i)=>{if(inR(q,4,8+i*58,62,46)){S.cp=k;if(k==='narrow')S.saw.narrow=true;}});return;}
+      if(S.cp==='narrow'){
+        for(const[bar,b,val]of[['L',LBAR,S.setL],['R',RBAR,S.setR]]){const part=barPart(b,val,MAXM,q);if(!part)continue;S.focusBar=bar;
+          if(part==='thumb'){S.press={type:'thumb',bar,w,grab:q.x-thumbX(b,val,MAXM)};return;}
+          S.press={type:'bar',bar,part,w,q};startRepeat(bar,part);return;}
+        if(inR(q,BTN.l,BTN.t,BTN.r-BTN.l,BTN.b-BTN.t)){S.press={type:'button',w,inside:true};return;}}}
+    return;}
+  const sw=SW();
+  const hit=inR(p,sw-50,27,32,46)?'disk':inR(p,sw-50,MH-64,32,46)?'trash':null;
+  const now=performance.now();
+  if(hit==='disk'&&S.lastClick&&S.lastClick.k==='disk'&&now-S.lastClick.t<450){const tw2=S.win.find(v=>v.id==='tools');tw2.open=true;toFront(tw2);}
+  S.lastClick=hit?{k:hit,t:now}:null;S.sel=hit;}
+function mouseMove(){const p=G(),pr=S.press;
+  if(S.menu){const t=titleAt(p);if(t&&t.k!==S.menu&&(pr||S.sticky)){S.menu=t.k;if(t.k==='apple')S.saw.apple=true;}S.hover=itemAt(p);}
+  if(!pr)return;
+  if(pr.type==='drag'){pr.w.x=clamp(p.x-pr.ox,-pr.w.w+40,SW()-40);pr.w.y=clamp(p.y-pr.oy,20,MH-20);}
+  else if(pr.type==='close'){pr.inside=inR(p,pr.w.x+7,pr.w.y+3,13,13);}
+  else if(pr.type==='button'){const q=local(pr.w,p);pr.inside=inR(q,BTN.l,BTN.t,BTN.r-BTN.l,BTN.b-BTN.t);}
+  else if(pr.type==='thumb'){const q=local(pr.w,p),b=pr.bar==='L'?LBAR:RBAR;setBar(pr.bar,(q.x-pr.grab-b.l-16)/(b.r-b.l-48)*MAXM);}
+  else if(pr.type==='bar'){pr.q=local(pr.w,p);}}
+function mouseUp(){const p=G(),pr=S.press;S.press=null;stopRepeat();if(S.boot)return;
+  if(pr&&pr.type==='menu'){const i=itemAt(p);if(i>=0){const k=S.menu;S.menu=null;menuAction(k,i);return;}
+    if(titleAt(p)){S.sticky=true;return;}S.menu=null;return;}
+  if(!pr)return;
+  if(pr.type==='close'&&pr.inside){pr.w.open=false;}
+  if(pr.type==='button'&&pr.inside)restart(false);}
+
+/* ---- restart: black, happy Mac, welcome, Narrow Screen paints its margins, Finder ---- */
+let bootTimers=[];
+function restart(shiftClick){bootTimers.forEach(clearTimeout);bootTimers=[];stopRepeat();
+  S.menu=null;S.press=null;S.boot={phase:'black',L:S.setL,R:S.setR,skip:false,shiftClick:!!shiftClick};
+  const k=reduce?0.4:1,seq=[['happy',350],['welcome',1300],['init',2300],['done',2900]];
+  seq.forEach(([ph,t])=>bootTimers.push(setTimeout(()=>{
+    if(ph==='init')S.boot.skip=S.shift||S.boot.shiftClick;
+    if(ph==='done'){const skip=S.boot.skip;S.L=skip?0:S.boot.L;S.R=skip?0:S.boot.R;S.skipped=skip;S.restarted=true;S.boot=null;
+      S.win=freshWindows();S.sel=null;S.cur={x:clamp(300,S.L,MW-1-S.R),y:150};}
+    else S.boot.phase=ph;request();},t*k)));
+  request();}
+
+/* ---- wiring ---- */
+crt.addEventListener('pointermove',e=>{const p=toMac(e);crt.style.cursor=p.inside?'none':'default';moveCursor(p);mouseMove();request();});
+crt.addEventListener('pointerdown',e=>{e.preventDefault();try{crt.setPointerCapture(e.pointerId);}catch(_){}
+  S.shift=e.shiftKey;moveCursor(toMac(e));mouseMove();mouseDown(e);request();});
+crt.addEventListener('pointerup',e=>{moveCursor(toMac(e));mouseUp();request();});
+crt.addEventListener('pointercancel',()=>{S.press=null;stopRepeat();request();});
+addEventListener('keydown',e=>{if(e.key==='Shift')S.shift=true;});
+addEventListener('keyup',e=>{if(e.key==='Shift')S.shift=false;});
+addEventListener('blur',()=>{S.shift=false;});
+crt.addEventListener('keydown',e=>{if(S.boot)return;let used=true;const cp=S.win.find(v=>v.id==='cp'),on=cp.open&&S.cp==='narrow';
+  if(e.key==='Escape')S.menu=null;
+  else if(on&&(e.key==='ArrowUp'||e.key==='ArrowDown'))S.focusBar=S.focusBar==='L'?'R':'L';
+  else if(on&&(e.key==='ArrowLeft'||e.key==='ArrowRight'))stepBar(S.focusBar,e.key==='ArrowLeft'?'ldn':'rdn');
+  else if(on&&e.key==='Enter')restart(e.shiftKey);
+  else if(e.key==='Enter')openCP(true);
+  else used=false;
+  if(used){e.preventDefault();request();}});
+$('sOpen').addEventListener('click',()=>{if(!S.boot)openCP(true);});
+$('sRestart').addEventListener('click',e=>{restart(e.shiftKey);});
+$('sXray').addEventListener('click',()=>{S.xray=!S.xray;request();});
+$('sOurs').addEventListener('click',()=>{if(window.reproduceOurMac)window.reproduceOurMac();else{picW=OUR_W;request();}});
+$('sReset').addEventListener('click',()=>{bootTimers.forEach(clearTimeout);bootTimers=[];stopRepeat();S=freshState();request();});
+document.addEventListener('macwidth',e=>{picW=e.detail;request();});
+if(typeof window.macPictureWidth==='number')picW=window.macPictureWidth;
+function size(){const r=crt.getBoundingClientRect(),d=Math.min(2,window.devicePixelRatio||1);
+  crt.width=Math.max(320,Math.round(r.width*d));crt.height=Math.round(crt.width*760/1040);request();}
+new ResizeObserver(size).observe(crt);
+function fontsReady(){g.font=FONT;const m=g.measureText('H');if(m.actualBoundingBoxAscent)ASC=Math.round(m.actualBoundingBoxAscent);layoutTitles();request();}
+layoutTitles();size();
+if(document.fonts&&document.fonts.load)document.fonts.load(FONT).then(fontsReady,fontsReady);else fontsReady();
 })();
 </script>
 </body>
